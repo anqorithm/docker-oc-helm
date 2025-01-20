@@ -33,6 +33,6 @@ RUN which oc && which helm && \
     helm version --client
 
 # Set working directory
-WORKDIR /work
+WORKDIR /workstation
 
 CMD ["bash"]
