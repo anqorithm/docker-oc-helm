@@ -1,5 +1,8 @@
 # Docker Image with OpenShift CLI and Helm
 
+![OpenShift CLI](https://img.shields.io/badge/OpenShift%20CLI-oc-blue)
+![Helm](https://img.shields.io/badge/Helm-helm-blue)
+
 This Docker image contains both OpenShift Command Line Interface (oc) and Helm package manager, making it useful for container orchestration and Kubernetes/OpenShift operations.
 
 ## Contents
@@ -10,7 +13,7 @@ This Docker image contains both OpenShift Command Line Interface (oc) and Helm p
 ## Building the Image
 
 ```bash
-docker build -t oc-helm-image .
+docker build -t oc-helm-image -f docker/Dockerfile .
 ```
 
 ## Usage
