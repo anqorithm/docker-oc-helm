@@ -1,0 +1,8 @@
+apiVersion: v2
+name: strapi
+version: 0.1.0
+description: A Helm chart for Strapi with PostgreSQL
+dependencies:
+  - name: postgresql
+    version: ~12.5.5
+    repository: https://charts.bitnami.com/bitnami

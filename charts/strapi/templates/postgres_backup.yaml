@@ -1,0 +1,89 @@
+{{- if .Values.postgresBackup.enabled -}}
+{{- $fullName := include "strapi.fullname" . -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  annotations:
+  labels:
+  name:  "{{ include "strapi.fullname" . }}-postgres-backup"
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  schedule: {{ .Values.postgresBackup.schedule }}
+  jobTemplate:
+    metadata:
+    spec:
+      template:
+        metadata:
+          annotations:
+        spec:
+          containers:
+          - image: registry.gitlab.com/trieb.work/postgres-backup-s3
+            imagePullPolicy: Always
+            name: "{{ include "strapi.fullname" . }}-postgres-backup"
+            env:
+              - name: NUMBER_OF_VERSIONS
+                value: {{ .Values.postgresBackup.historyLimit | quote }}
+              - name: DATABASES
+                value: {{ .Values.postgresql.auth.database | quote }}     
+
+            {{- if .Values.r2.enabled }}
+              - name: S3_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: CF_ACCESS_KEY_ID
+                    name: {{ include "strapi.fullname" . }}
+              - name: S3_ENDPOINT
+                valueFrom:
+                  secretKeyRef:
+                    key: CF_ENDPOINT
+                    name: {{ include "strapi.fullname" . }}
+              - name: S3_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    key: CF_SECRET_ACCESS_KEY
+                    name: {{ include "strapi.fullname" . }}
+              {{- else }}
+              - name: S3_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: AWS_ACCESS_KEY_ID
+                    name: {{ include "strapi.fullname" . }}
+              - name: S3_ENDPOINT
+                valueFrom:
+                  secretKeyRef:
+                    key: AWS_ENDPOINT
+                    name: {{ include "strapi.fullname" . }}
+              - name: S3_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    key: AWS_SECRET_ACCESS_KEY
+                    name: {{ include "strapi.fullname" . }}
+              {{- end }}
+              - name: S3_BUCKET_NAME
+                value: {{ .Values.postgresBackup.bucketName | quote }}      
+              - name: POSTGRES_DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    key: POSTGRES_DB_PASSWORD
+                    name: {{ include "strapi.fullname" . }}
+              - name: POSTGRES_DB_USER
+                valueFrom:
+                  secretKeyRef:
+                    key: POSTGRES_DB_USER
+                    name: {{ include "strapi.fullname" . }}
+              - name: POSTGRES_DB_HOST
+                value: {{ include "strapi.internalDatabaseBackupHost" .}}  
+              - name: POSTGRES_DB_PORT
+                value: "5432"  
+            envFrom:
+            - secretRef:
+                name: {{ include "strapi.fullname" . }}
+            securityContext:
+              allowPrivilegeEscalation: false
+              privileged: false
+              readOnlyRootFilesystem: false
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 30
+{{- end -}}
